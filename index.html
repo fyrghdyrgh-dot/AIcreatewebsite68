@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 设计导航站（设计师工作台）｜工作流·任务·画面描述模板</title>
+  <meta name="description" content="AI 绘画工作台：SD提示词生成、线稿上色、图像无损放大与电商模特的工作流入口；配套任务与清单。本地收藏/最近使用；纯前端单页可直接部署。" />
+  <meta property="og:title" content="AI 绘画工作台" />
+  <meta property="og:description" content="工作流·任务·提示词库：把 AI 商业出图做成闭环。" />
+  <meta property="og:type" content="website" />
+  <meta name="google-site-verification" content="arjs-oZbyV23KGmnV1Cygw36XSePu58Mn6Ja2Bu7tm4" />
+  <style>
+    :root{
+  --bg:#f3f4f6;
+  --panel:#ffffff;
+  --panel2:#e5e7eb;
+  --text:#1f2937;
+  --muted:#4b5563;
+  --line:rgba(0,0,0,.08);
+  --shadow:0 10px 25px rgba(139,92,246,.12);
+  --accent:#8b5cf6;
+  --accent2:#7c3aed;
+  --good:#10b981;
+  --warn:#f59e0b;
+  --radius:16px;
+}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(52,211,153,.18), transparent 60%),
+        radial-gradient(900px 500px at 100% 0%, rgba(96,165,250,.14), transparent 55%),
+        radial-gradient(900px 500px at 0% 100%, rgba(251,191,36,.10), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      line-height:1.5;
+    }
+    a{color:inherit;text-decoration:none}
+    button{font-family:inherit}
+    .layout{
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 14px;
+      display:grid;
+      grid-template-columns: 320px 1fr;
+      gap: 14px;
+      min-height: 100vh;
+    }
+    @media (max-width: 980px){
+      .layout{grid-template-columns: 1fr}
+    }
+    .panel{
+      border:1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(15,23,42,.60);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .sidebar{
+      position: sticky;
+      top: 12px;
+      align-self: start;
+      border-radius: 18px;
+      background:
+        radial-gradient(720px 420px at 14% 10%, rgba(52,211,153,.18), transparent 60%),
+        radial-gradient(620px 420px at 86% 14%, rgba(96,165,250,.16), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04));
+    }
+    @media (max-width: 980px){.sidebar{position: relative; top: 0}}
+    .side-h{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(230,237,247,.10);
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{
+      width:38px;height:38px;border-radius:16px;
+      background:
+        radial-gradient(12px 12px at 30% 30%, rgba(255,255,255,.20), transparent 62%),
+        linear-gradient(135deg, rgba(52,211,153,1), rgba(96,165,250,.92));
+      box-shadow: 0 18px 44px rgba(52,211,153,.12);
+      flex: 0 0 auto;
+    }
+    .brand-text{display:flex;flex-direction:column;line-height:1.1}
+    .brand-title{font-weight:980;letter-spacing:.2px}
+    .brand-sub{margin-top:2px;color: var(--muted);font-size:12px}
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;
+      font-size:12px;
+      color: rgba(230,237,247,.86);
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+      border-radius: 999px;
+      padding: 6px 10px;
+      white-space:nowrap;
+    }
+    .side-b{padding: 12px 14px 14px}
+    .search{
+      display:flex;gap:10px;flex-wrap:wrap;
+      padding: 12px;
+      border-radius: 16px;
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+    }
+    .input{
+      flex: 1;
+      min-width: 180px;
+      border:1px solid rgba(230,237,247,.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(2,6,23,.46);
+      outline: none;
+      color: var(--text);
+    }
+    .input:focus{border-color: rgba(52,211,153,.34); box-shadow: 0 0 0 4px rgba(52,211,153,.12)}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+      color: rgba(230,237,247,.92);
+      border-radius:999px;
+      padding:10px 12px;
+      font-size:13px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .btn:hover{transform: translateY(-1px); border-color: rgba(52,211,153,.22); background: rgba(255,255,255,.10)}
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(52,211,153,1), rgba(96,165,250,.92));
+      color:#041019;
+      border-color: rgba(52,211,153,.24);
+      font-weight:980;
+    }
+    .btn.ghost{background:transparent}
+    .mini{
+      display:inline-flex;align-items:center;justify-content:center;
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+      color: rgba(230,237,247,.92);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .mini:hover{transform: translateY(-1px); border-color: rgba(52,211,153,.22); background: rgba(255,255,255,.10)}
+    .mini.primary{
+      background: linear-gradient(135deg, rgba(52,211,153,1), rgba(96,165,250,.92));
+      color:#041019;
+      border-color: rgba(52,211,153,.24);
+      font-weight:980;
+    }
+    .hint{margin-top: 8px;color: var(--muted);font-size: 12px}
+    .adbox{
+      border-radius: 16px;
+      border:1px dashed rgba(52,211,153,.30);
+      background:
+        radial-gradient(520px 240px at 16% 10%, rgba(52,211,153,.16), transparent 60%),
+        radial-gradient(520px 240px at 86% 10%, rgba(96,165,250,.14), transparent 60%),
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .adbox .t{font-weight:980}
+    .adbox .d{color: var(--muted);font-size:12px;margin-top:4px;line-height:1.6}
+    .adbox .a{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .side-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top: 12px}
+    .side-nav{display:flex;flex-direction:column;gap:8px;margin-top: 12px}
+    .navbtn{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 10px 12px;
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .navbtn:hover{transform: translateY(-1px); border-color: rgba(52,211,153,.22); background: rgba(255,255,255,.10)}
+    .navleft{display:flex;align-items:center;gap:10px}
+    .ic{
+      width:34px;height:34px;border-radius: 14px;
+      display:flex;align-items:center;justify-content:center;
+      background: radial-gradient(10px 10px at 30% 30%, rgba(255,255,255,.18), transparent 62%),
+        linear-gradient(135deg, rgba(52,211,153,.92), rgba(96,165,250,.86));
+      color:#041019;font-weight: 980;
+      box-shadow: 0 18px 44px rgba(52,211,153,.10);
+      flex: 0 0 auto;
+    }
+    .tag{
+      font-size: 11px;
+      color: rgba(230,237,247,.88);
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+      padding: 5px 8px;
+      border-radius: 999px;
+      white-space:nowrap;
+    }
+    .nt{font-weight:980}
+    .ns{color: var(--muted);font-size:12px;margin-top:2px}
+    .main{
+      border-radius: 18px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(230,237,247,.12);
+      box-shadow: 0 22px 70px rgba(0,0,0,.45);
+      overflow:hidden;
+    }
+    .top{
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(230,237,247,.10);
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.06));
+    }
+    .ttl{font-weight:980}
+    .sub{color: var(--muted);font-size:12px;margin-top:4px;line-height:1.6}
+    .content{padding: 12px 14px 14px; display:flex; flex-direction:column; gap:12px}
+    .section{
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(11,18,34,.62);
+      border-radius: 18px;
+      overflow:hidden;
+    }
+    .sh{
+      padding: 12px 12px 10px;
+      border-bottom: 1px solid rgba(230,237,247,.10);
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;
+    }
+    .sb{padding: 12px}
+    .two{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
+    @media (max-width: 980px){.two{grid-template-columns: 1fr}}
+    .box{
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(15,23,42,.55);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .box .h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .box .small{color: rgba(230,237,247,.72); font-size:12px; margin-top:6px; line-height:1.6}
+    .list{margin:10px 0 0; padding-left: 18px; color: rgba(230,237,247,.86)}
+    .list li{margin: 6px 0}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:7px 10px;border-radius:999px;
+      border:1px solid rgba(230,237,247,.12);
+      background: rgba(255,255,255,.06);
+      color: rgba(230,237,247,.86);
+      font-size:12px;
+      user-select:none;
+    }
+    .toast{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 18px;
+      background: rgba(2,6,23,.85);
+      border: 1px solid rgba(230,237,247,.16);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      color: rgba(230,237,247,.95);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 60;
+      max-width: calc(100vw - 24px);
+      text-align:center;
+    }
+    .toast.show{opacity:1; transform: translateX(-50%) translateY(-6px)}
+    .right-ad{
+      position: fixed;
+      right: 14px;
+      top: 120px;
+      z-index: 30;
+      width: 210px;
+      border: 1px solid rgba(230,237,247,.12);
+      border-radius: 16px;
+      background: rgba(11,18,34,.68);
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+    .right-ad-head{
+      padding: 10px 10px 0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .right-ad-title{font-weight:980;font-size:13px;color: rgba(230,237,247,.92)}
+    .right-ad-body{padding: 10px}
+    .right-ad-body p{margin:0;color: rgba(230,237,247,.72);font-size:12px;line-height:1.55}
+    .right-ad-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .right-ad .mini{padding:7px 10px}
+    @media (max-width: 1220px){
+      .right-ad{display:none}
+    }
+  </style>
+</head>
+<body>
+  <aside class="right-ad" aria-label="右侧广告" style="border: 2px solid var(--accent); box-shadow: 0 0 20px rgba(139,92,246, 0.3);">
+    <div class="right-ad-head">
+      <div class="right-ad-title">sproidc 服务器方案</div>
+      <span class="badge">赞助</span>
+    </div>
+    <div class="right-ad-body">
+      <p>适合“云端部署 SD + 高性能 GPU 渲染 + 团队大容量图库”的设计场景：页面更稳、访问更顺。</p>
+      <div class="right-ad-actions">
+        <a class="mini primary" href="https://www.sproidc.com/" target="_blank" rel="noopener noreferrer" data-event="ad_right_primary">查看配置</a>
+        <a class="mini" href="https://www.sproidc.com/" target="_blank" rel="noopener noreferrer" data-event="ad_right_secondary">进入官网</a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="layout">
+    <aside class="panel sidebar" aria-label="侧栏">
+      <div class="side-h">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div class="brand-text">
+            <div class="brand-title">AI 绘画工作台</div>
+            <div class="brand-sub">工作流 · 任务 · 画面描述模板</div>
+          </div>
+        </div>
+        <div class="badge">fin3</div>
+      </div>
+
+      <div class="side-b">
+        <div class="adbox" aria-label="广告位">
+          <div class="t">1bgp 全球云服务器 / 物理服务器</div>
+          <div class="d">适合部署 Stable Diffusion、ComfyUI 等大型绘图模型；提供发烧级 GPU 算力，是设计师的云端渲染农场。</div>
+          <div class="a">
+            <a class="mini primary" href="https://www.1bgp.com/" target="_blank" rel="noopener noreferrer" data-event="ad_side_primary">查看方案</a>
+            <a class="mini" href="https://www.1bgp.com/" target="_blank" rel="noopener noreferrer" data-event="ad_side_secondary">进入官网</a>
+          </div>
+        </div>
+
+        <div class="search" role="search">
+          <input class="input" id="q" placeholder="搜索：伪原创/长尾词/网站分析/爬虫/收录/外链…" autocomplete="off" />
+          <button class="btn" id="clear" type="button" data-event="search_clear">清空</button>
+        </div>
+        <div class="hint">侧栏用于导航；主区提供设计师工作流与工具入口。本地收藏/最近使用仅保存在浏览器。</div>
+
+        <div class="side-actions">
+          <button class="btn ghost" id="showFavs" type="button" data-event="side_favs">只看收藏</button>
+          <button class="btn primary" id="open1bgp" type="button" data-event="side_1bgp">部署到 1bgp</button>
+        </div>
+
+        <div class="side-nav" aria-label="快捷导航">
+          <a class="navbtn" href="#design3-workflow" data-event="side_workflow">
+            <div class="navleft">
+              <div class="ic" aria-hidden="true">流</div>
+              <div>
+                <div class="nt">设计师工作流</div>
+                <div class="ns">灵感→生图→修图→交付</div>
+              </div>
+            </div>
+            <span class="tag">SOP</span>
+          </a>
+          <a class="navbtn" href="#design3-tasks" data-event="side_tasks">
+            <div class="navleft">
+              <div class="ic" aria-hidden="true">务</div>
+              <div>
+                <div class="nt">任务清单</div>
+                <div class="ns">本地保存 · 轻量闭环</div>
+              </div>
+            </div>
+            <span class="tag">todo</span>
+          </a>
+          <a class="navbtn" href="#design3-check" data-event="side_check">
+            <div class="navleft">
+              <div class="ic" aria-hidden="true">清</div>
+              <div>
+                <div class="nt">画面描述模板</div>
+                <div class="ns">复制即用</div>
+              </div>
+            </div>
+            <span class="tag">tpl</span>
+          </a>
+          <a class="navbtn" href="#design3-tools" data-event="side_tools">
+            <div class="navleft">
+              <div class="ic" aria-hidden="true">工</div>
+              <div>
+                <div class="nt">工具入口</div>
+                <div class="ns">搜索 · 收藏 · 最近</div>
+              </div>
+            </div>
+            <span class="tag">tools</span>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main" aria-label="主内容">
+      <div class="top">
+        <div>
+          <div class="ttl">把商业出图做成“自动化闭环”</div>
+          <div class="sub">用 AI 辅助构建精准的画面提示词，在云端极速跑出绝美大图，用任务清单推进设计。祝您灵感爆棚。</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <span class="chip">本地收藏</span>
+          <span class="chip">本地最近</span>
+          <span class="chip">任务/模板</span>
+        </div>
+      </div>
+
+      <div class="content">
+        <section class="section" id="design3-workflow" aria-label="工作流">
+          <div class="sh">
+            <div>
+              <div class="ttl">设计师工作流（AI+绘画）</div>
+              <div class="sub">把每一步写成“灵感 → 生图 → 交付”，告别加班修图与甲方的反复折磨。</div>
+            </div>
+            <span class="badge">SOP</span>
+          </div>
+          <div class="sb">
+            <div class="two">
+              <div class="box">
+                <div class="h">
+                  <div class="ttl">1) 构建精准画面提示词</div>
+                  <button class="mini" type="button" id="copyAbs" data-event="copy_abs">复制提示词</button>
+                </div>
+                <div class="small">让 AI 帮你快速生成符合 SD/Midjourney 规范的结构化英文提示词。</div>
+                <ul class="list">
+                  <li>主体：核心刻画</li>
+                  <li>光影：渲染氛围</li>
+                  <li>画质：虚幻引擎级</li>
+                </ul>
+              </div>
+              <div class="box">
+                <div class="h">
+                  <div class="ttl">2) 云端极速生图与渲染</div>
+                  <button class="mini" type="button" id="copyData" data-event="copy_data">复制清单</button>
+                </div>
+                <div class="small">在 1bgp 的云服务器上部署 WebUI，免去升级电脑的烦恼，云端极速出图。</div>
+                <ul class="list">
+                  <li>文生图：天马行空</li>
+                  <li>图生图：垫图参考</li>
+                  <li>ControlNet：精准控姿</li>
+                </ul>
+              </div>
+              <div class="box">
+                <div class="h">
+                  <div class="ttl">3) 图像无损放大与精修</div>
+                  <button class="mini" type="button" id="copyTrack" data-event="copy_track">复制模板</button>
+                </div>
+                <div class="small">使用后期工具进行一键线稿上色、老照片修复、局部重绘与 4K 无损放大。</div>
+                <ul class="list">
+                  <li>扩图：AI 智能延展</li>
+                  <li>重绘：消除画面瑕疵</li>
+                  <li>放大：商业级 8K 导出</li>
+                </ul>
+              </div>
+              <div class="box">
+                <div class="h">
+                  <div class="ttl">4) 商业级模特换装与导出</div>
+                  <button class="mini" type="button" id="copyWeekly" data-event="copy_weekly">复制周报</button>
+                </div>
+                <div class="small">将处理好的商用大图交付给客户，或利用云盘存储团队的设计素材。</div>
+                <ul class="list">
+                  <li>电商：AI 模特换衣</li>
+                  <li>排版：海报一键生成</li>
+                  <li>存储：素材安全归档</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="design3-tasks" aria-label="任务清单">
+          <div class="sh">
+            <div>
+              <div class="ttl">设计任务（本地保存）</div>
+              <div class="sub">把每周交付拆成可执行动作：越可验证越好推进。</div>
+            </div>
+            <span class="badge">todo</span>
+          </div>
+          <div class="sb">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <input class="input" id="taskInput" placeholder="新增任务：例如『出图计划：生成10张赛博朋克风插画+完成电商模特换衣+无损放大交付』" />
+              <button class="btn primary" id="addTask" type="button" data-event="add_task">添加</button>
+              <button class="btn" id="clearDone" type="button" data-event="clear_done">清除已完成</button>
+            </div>
+            <div id="taskList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px"></div>
+          </div>
+        </section>
+
+        <section class="section" id="design3-check" aria-label="画面描述模板">
+          <div class="sh">
+            <div>
+              <div class="ttl">画面描述模板（复制即用）</div>
+              <div class="sub">模板是“可复用资产”：口径固定，效率自然上来。</div>
+            </div>
+            <span class="badge">tpl</span>
+          </div>
+          <div class="sb">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <input class="input" id="tplTitle" placeholder="模板标题：例如『SD 提示词指令』" />
+              <button class="btn primary" id="copyTpl" type="button" data-event="copy_tpl">复制模板</button>
+            </div>
+            <div class="hint" style="margin-top:10px">点击复制后，粘贴到 Notion/Docs 即可开始写。</div>
+          </div>
+        </section>
+
+        <section class="section" id="design3-tools" aria-label="工具入口">
+          <div class="sh">
+            <div>
+              <div class="ttl">工具入口（可收藏）</div>
+              <div class="sub">按关键词搜索并收藏；点击访问会自动记录“最近使用”。</div>
+            </div>
+            <span class="badge">tools</span>
+          </div>
+          <div class="sb">
+            <div id="toolGrid" style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:12px"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const EVENT_PREFIX = "design3_";
+    const LS_KEY = "aidesign3:favs";
+    const REC_KEY = "aidesign3:recent";
+    const TASK_KEY = "aidesign3:tasks";
+
+    const tools = [
+      { name: "ChatGPT", desc: "通用对话与写作助手，适合内容生成与问题解答。", url: "https://chat.openai.com", cat: "对话/助手", tags: ["写作","问答","通用"], icon: "https://www.iliudar.com/api/icon?url=https%3A%2F%2Fchat.openai.com&v=2" },
+      { name: "Kimi", desc: "长文阅读与写作助手，适合总结资料、写方案与对话。", url: "https://kimi.moonshot.cn", cat: "对话/助手", tags: ["长文","总结","中文"], icon: "https://www.iliudar.com/api/icon?url=https%3A%2F%2Fstatics.moonshot.cn%2Fkimi-web-seo%2Ffavicon.ico&v=2" },
+      { name: "Perplexity", desc: "检索增强问答，适合快速查资料与引用。", url: "https://www.perplexity.ai", cat: "对话/助手", tags: ["检索","引用","快速"] },
+      { name: "Notion AI", desc: "知识库与写作结合，适合团队文档与 SOP。", url: "https://www.notion.so/product/ai", cat: "办公/知识库", tags: ["文档","SOP","协作"] },
+      { name: "Gamma", desc: "一键生成演示文稿，适合汇报与路演。", url: "https://gamma.app", cat: "办公/知识库", tags: ["PPT","汇报","排版"] },
+      { name: "Google Sheets", desc: "表格与数据整理，适合轻量数据运营。", url: "https://docs.google.com/spreadsheets", cat: "数据/分析", tags: ["表格","整理","运营"] },
+      { name: "Metabase", desc: "BI 看板与查询，适合数据可视化。", url: "https://www.metabase.com", cat: "数据/分析", tags: ["BI","看板","查询"] },
+      { name: "Looker Studio", desc: "数据报表与可视化，适合复盘与展示。", url: "https://lookerstudio.google.com", cat: "数据/分析", tags: ["报表","可视化","复盘"] },
+      { name: "Airtable", desc: "表格数据库，适合内容库与轻应用。", url: "https://airtable.com", cat: "数据/分析", tags: ["数据库","内容库","协作"] }
+    ];
+
+    const state = { q: "", favOnly: false, favs: new Set() };
+    const els = {
+      q: document.getElementById("q"),
+      clear: document.getElementById("clear"),
+      showFavs: document.getElementById("showFavs"),
+      open1bgp: document.getElementById("open1bgp"),
+      toolGrid: document.getElementById("toolGrid"),
+      toast: document.getElementById("toast"),
+      taskInput: document.getElementById("taskInput"),
+      addTask: document.getElementById("addTask"),
+      clearDone: document.getElementById("clearDone"),
+      taskList: document.getElementById("taskList"),
+      tplTitle: document.getElementById("tplTitle"),
+      copyTpl: document.getElementById("copyTpl"),
+      copyAbs: document.getElementById("copyAbs"),
+      copyData: document.getElementById("copyData"),
+      copyTrack: document.getElementById("copyTrack"),
+      copyWeekly: document.getElementById("copyWeekly")
+    };
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+    function normalize(s){return (s || "").toLowerCase().trim();}
+    function toast(msg){
+      els.toast.textContent = msg;
+      els.toast.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => els.toast.classList.remove("show"), 1600);
+    }
+    function track(el){
+      const ev = el?.dataset?.event;
+      if(!ev) return;
+      window.__events = window.__events || [];
+      window.__events.push({ event: EVENT_PREFIX + ev, ts: Date.now() });
+    }
+    function loadJson(key, fallback){
+      try{
+        const raw = localStorage.getItem(key);
+        if(!raw) return fallback;
+        const v = JSON.parse(raw);
+        return v ?? fallback;
+      }catch(_){return fallback;}
+    }
+    function saveJson(key, value){
+      try{ localStorage.setItem(key, JSON.stringify(value)); }catch(_){}
+    }
+    function loadFavs(){
+      const arr = loadJson(LS_KEY, []);
+      if(Array.isArray(arr)) state.favs = new Set(arr.filter(Boolean));
+    }
+    function saveFavs(){
+      saveJson(LS_KEY, Array.from(state.favs));
+    }
+    function loadRecents(){ return loadJson(REC_KEY, []).filter(Boolean); }
+    function pushRecent(name){
+      if(!name) return;
+      const list = loadRecents();
+      const next = [name, ...list.filter(x => x !== name)].slice(0, 12);
+      saveJson(REC_KEY, next);
+    }
+    function toolMatches(t){
+      if(state.favOnly && !state.favs.has(t.name)) return false;
+      const q = state.q;
+      if(!q) return true;
+      const hay = [t.name, t.desc, t.cat, ...(t.tags || [])].join(" ").toLowerCase();
+      return hay.includes(q);
+    }
+    function renderTools(){
+      const list = tools.filter(toolMatches);
+      els.toolGrid.innerHTML = list.map(t => {
+        const fav = state.favs.has(t.name);
+        return `
+          <div class="box" style="padding:12px; display:flex; flex-direction:column; gap:10px">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px">
+              <div style="min-width:0">
+                <div style="font-weight:980; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${escapeHtml(t.name)}</div>
+                <div class="small">${escapeHtml(t.desc || "")}</div>
+              </div>
+              <button class="mini" type="button" data-fav="${escapeHtml(t.name)}" data-event="fav_toggle" aria-pressed="${fav ? "true" : "false"}">${fav ? "★" : "☆"}</button>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap">
+              <a class="mini primary" href="${escapeHtml(t.url)}" target="_blank" rel="noopener noreferrer" data-tool="${escapeHtml(t.name)}" data-event="tool_open">访问</a>
+              <button class="mini" type="button" data-copy="${escapeHtml(t.name)}｜${escapeHtml(t.url)}" data-event="tool_copy">复制</button>
+            </div>
+          </div>
+        `;
+      }).join("") || `<div class="hint">没有匹配结果，尝试换关键词或取消“只看收藏”。</div>`;
+
+      els.toolGrid.querySelectorAll('[data-fav]').forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          track(e.currentTarget);
+          const name = e.currentTarget.getAttribute("data-fav");
+          if(!name) return;
+          if(state.favs.has(name)) state.favs.delete(name);
+          else state.favs.add(name);
+          saveFavs();
+          renderTools();
+          toast(state.favs.has(name) ? "已收藏" : "已取消收藏");
+        });
+      });
+
+      els.toolGrid.querySelectorAll('[data-event="tool_open"]').forEach(a => {
+        a.addEventListener("click", (e) => {
+          track(e.currentTarget);
+          const name = e.currentTarget.getAttribute("data-tool") || "";
+          pushRecent(name);
+        });
+      });
+
+      els.toolGrid.querySelectorAll('[data-event="tool_copy"]').forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          track(e.currentTarget);
+          const text = e.currentTarget.getAttribute("data-copy") || "";
+          try{
+            await navigator.clipboard.writeText(text);
+            toast("已复制到剪贴板");
+          }catch(_){
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.style.position = "fixed";
+            ta.style.left = "-9999px";
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            ta.remove();
+            toast("已复制到剪贴板");
+          }
+        });
+      });
+    }
+    function renderTasks(){
+      const tasks = loadJson(TASK_KEY, []);
+      const list = Array.isArray(tasks) ? tasks : [];
+      els.taskList.innerHTML = list.map((t, idx) => `
+        <div class="box" style="padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px">
+          <div style="display:flex; align-items:center; gap:10px; min-width:0">
+            <input type="checkbox" ${t.done ? "checked" : ""} data-idx="${idx}" data-event="task_toggle" />
+            <div style="min-width:0">
+              <div style="font-weight:980; text-decoration:${t.done ? "line-through" : "none"}; color:${t.done ? "rgba(230,237,247,.62)" : "rgba(230,237,247,.92)"}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${escapeHtml(t.text)}</div>
+              <div class="small">建议：每个任务都能对应到“证据/链接/数据表”。</div>
+            </div>
+          </div>
+          <button class="mini" type="button" data-del="${idx}" data-event="task_del">删除</button>
+        </div>
+      `).join("") || `<div class="hint">还没有任务。把一次周报拆成 3-5 个可交付动作，会更好推进。</div>`;
+
+      els.taskList.querySelectorAll('[data-event="task_toggle"]').forEach(chk => {
+        chk.addEventListener("change", (e) => {
+          track(e.currentTarget);
+          const idx = Number(e.currentTarget.getAttribute("data-idx"));
+          const tasks2 = loadJson(TASK_KEY, []);
+          if(!Array.isArray(tasks2) || Number.isNaN(idx) || !tasks2[idx]) return;
+          tasks2[idx].done = !!e.currentTarget.checked;
+          saveJson(TASK_KEY, tasks2);
+          renderTasks();
+        });
+      });
+      els.taskList.querySelectorAll('[data-event="task_del"]').forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          track(e.currentTarget);
+          const idx = Number(e.currentTarget.getAttribute("data-del"));
+          const tasks2 = loadJson(TASK_KEY, []);
+          if(!Array.isArray(tasks2) || Number.isNaN(idx)) return;
+          tasks2.splice(idx, 1);
+          saveJson(TASK_KEY, tasks2);
+          renderTasks();
+          toast("已删除");
+        });
+      });
+    }
+    function copyText(text){
+      try{
+        navigator.clipboard.writeText(text);
+        toast("已复制");
+      }catch(_){
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        toast("已复制");
+      }
+    }
+    function init(){
+      loadFavs();
+      renderTools();
+      renderTasks();
+
+      els.q.addEventListener("input", () => {
+        state.q = normalize(els.q.value);
+        renderTools();
+      });
+      els.clear.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        els.q.value = "";
+        state.q = "";
+        renderTools();
+        toast("已清空搜索");
+      });
+      els.showFavs.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        state.favOnly = !state.favOnly;
+        els.showFavs.textContent = state.favOnly ? "显示全部" : "只看收藏";
+        renderTools();
+        toast(state.favOnly ? "仅显示收藏" : "显示全部");
+      });
+      els.open1bgp.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        window.open("https://www.1bgp.com/", "_blank", "noopener,noreferrer");
+      });
+
+      els.addTask.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        const text = (els.taskInput.value || "").trim();
+        if(!text){ toast("请输入任务内容"); return; }
+        const tasks = loadJson(TASK_KEY, []);
+        const next = Array.isArray(tasks) ? tasks : [];
+        next.unshift({ text, done: false, ts: Date.now() });
+        saveJson(TASK_KEY, next.slice(0, 60));
+        els.taskInput.value = "";
+        renderTasks();
+        toast("已添加任务");
+      });
+      els.clearDone.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        const tasks = loadJson(TASK_KEY, []);
+        const next = (Array.isArray(tasks) ? tasks : []).filter(t => !t?.done);
+        saveJson(TASK_KEY, next);
+        renderTasks();
+        toast("已清除已完成");
+      });
+
+      els.copyTpl.addEventListener("click", (e) => {
+        track(e.currentTarget);
+        const title = (els.tplTitle.value || "行业周报").trim();
+        const text = [
+          `# ${title}`,
+          "",
+          "## 1. 本周变化（数据/事件/价格）",
+          "-",
+          "",
+          "## 2. 核心观点（一句话结论）",
+          "-",
+          "",
+          "## 3. 证据与数据（口径说明）",
+          "- 数据来源：",
+          "- 指标口径：",
+          "- 关键表格/图：",
+          "",
+          "## 4. 风险与反证",
+          "-",
+          "",
+          "## 5. 下周关注点（验证点）",
+          "-",
+          "",
+          "## 6. 附录（链接/截图/灵感与画册库）",
+          "-"
+        ].join("\\n");
+        copyText(text);
+      });
+
+      const absText = [
+        "请帮我生成一段用于 Stable Diffusion 的英文画面提示词：",
+        "1) 核心主体为：[如 赛博朋克少女]；2) 环境与光影：[如 霓虹灯，雨夜]；3) 风格与画质：[如 虚幻引擎5，8k分辨率，杰作]。",
+        "最后输出：请直接给我可以直接粘贴到 SD 的纯英文 Prompt，按逗号分隔。"
+      ].join("\\n");
+      const dataText = [
+        "【数据整理清单】",
+        "- 口径：时间/单位/币种/是否含税",
+        "- 对齐：同比/环比基数一致",
+        "- 异常：缺失/离群/重复/跳变",
+        "- 指标：YoY/环比/渗透率/毛利率等",
+        "- 留痕：数据来源链接与更新时间"
+      ].join("\\n");
+      const trackText = [
+        "【行业事件跟踪表】",
+        "- 事件：",
+        "- 影响路径：影响谁→影响什么→影响程度",
+        "- 验证点：下周看什么数据/公告来验证",
+        "- 风险：反向变化会发生什么"
+      ].join("\\n");
+      const weeklyText = [
+        "【周报输出】",
+        "本周变化：",
+        "核心观点：",
+        "证据与数据（口径）：",
+        "风险与反证：",
+        "下周关注点（验证点）："
+      ].join("\\n");
+
+      els.copyAbs.addEventListener("click", (e) => { track(e.currentTarget); copyText(absText); });
+      els.copyData.addEventListener("click", (e) => { track(e.currentTarget); copyText(dataText); });
+      els.copyTrack.addEventListener("click", (e) => { track(e.currentTarget); copyText(trackText); });
+      els.copyWeekly.addEventListener("click", (e) => { track(e.currentTarget); copyText(weeklyText); });
+
+      document.querySelectorAll('[data-event^="ad_"]').forEach(a => {
+        a.addEventListener("click", (e) => track(e.currentTarget));
+      });
+    }
+    init();
+  </script>
+
+  <!-- 不算子统计代码 -->
+  <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+</body>
+</html>
